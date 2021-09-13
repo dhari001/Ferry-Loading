@@ -1,0 +1,144 @@
+//imports required for program
+import java.io.File;
+import java.io.*;
+import java.io.IOException;
+import java.io.FileNotFoundException;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.InputStreamReader;
+
+//data structures
+import java.util.ArrayList;
+import java.util.List;
+import java.util.HashMap;
+
+public class Main{
+
+  //GLOBAL VARIABLES
+  int bestK, currK;
+  HashMap<Integer, Integer> visited;
+  private ArrayList<Integer> length;
+  private int n;
+  private int L;
+  private int[] currX, bestX;
+  int key;
+
+  //overriden methods for hash implementation
+  @Override
+  public int hashCode(){
+    int result = n + key;
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == this) {
+      return true;
+    }
+    if (!(obj instanceof Main)) {
+      return false;
+    }
+    return true;
+  }
+
+  //HELPER METHODS
+  //total length of all the cars on the ferry at a certain instance
+  int totalLengthOnFerry(int currK){
+    int size = 0;
+    for(int c=0; c < currK; c++){
+      size += length.get(c);
+    }
+    return size;
+  }
+
+  void BacktrackSolve(int currK, int currS){
+    if(currK > bestK){
+      bestK = currK;  //updated best possible number of cars that can be loaded
+
+      for(int j=0; j < currX.length; j++){
+        bestX[j] = currX[j];  //updated best possible location for cars loaded onto ferry
+      }
+    }
+
+    if(currK < n){  // if more cars can be considered for loading
+      if(currS >=  length.get(currK) && !(visited.containsKey(currK+1 +currS - length.get(currK)))){
+        currX[currK] = 1;
+        int newS = currS - length.get(currK);
+        BacktrackSolve(currK+1, newS);
+        visited.put(currK+1+ newS,1);
+      }
+
+      int size = totalLengthOnFerry(currK);
+      if((L - (size - (L - currS)))  >= length.get(currK) && !(visited.containsKey(currK+1 + currS))){
+        currX[currK] = 0;
+        BacktrackSolve(currK+1, currS);
+        visited.put(currK+1 + currS,0);
+      }
+
+    }
+  }
+
+  int hashFunction(int currK, int currS){
+    key = 31+(currS);
+    key = key/currK;
+    return key;
+  }
+
+  void output(int numCases, int j) throws IOException{
+      System.out.println(bestK);
+      for(int i=0; i < bestK; i++){
+        if(bestX[i] == 0){
+          System.out.println("starboard");
+        }
+        if(bestX[i] == 1){
+          System.out.println("port");
+        }
+      }
+      if(j+1 != numCases){        //only prints a blank line if more cases are left to output
+        System.out.println();
+      }
+  }
+
+  public static void main(String[] args) throws IOException{
+    Main ferryloading = new Main();
+    try{
+      ferryloading.Start();
+    } catch(Exception e){
+      System.out.println(e);
+    }
+  }
+
+  void Start() throws IOException{
+    //comment out following two lines to load test file directly into code
+    //FileReader fr = new FileReader("input2.txt");
+    //BufferedReader file= new BufferedReader(fr);
+
+    BufferedReader file = new BufferedReader(new InputStreamReader(System.in));
+    try{
+      int numCases = Integer.parseInt(file.readLine());
+      for(int i=0; i < numCases; i++){
+        length = new ArrayList<>();
+        file.readLine();       //accounts for blank line
+        n=0;
+        L = Integer.parseInt(file.readLine())*100;
+        String value;
+        while(!(value = file.readLine()).equals("0")) {
+          length.add(Integer.parseInt(value));
+          n+=1;
+        }
+        bestK = -1;
+        bestX = new int[n];
+        currX = new int[n];
+        visited = new HashMap<Integer, Integer>((int) Math.ceil(n/0.75));
+        BacktrackSolve(0,L);
+        output(numCases, i);
+      }
+    } catch(Exception e){
+      System.out.println(e);
+    }
+  }
+
+
+
+
+}
